@@ -1,0 +1,114 @@
+name: Release
+
+# Tags are cut by hand: `git tag -a v0.2.0 -m 'v0.2.0' && git push origin v0.2.0`.
+# The tag must match PLUGIN_GLPIMOBILE_VERSION in setup.php — that constant is
+# what GLPI shows in the plugin list and what its update check compares, so a
+# tag that disagrees with it ships a lie. The run fails before publishing.
+#
+# workflow_dispatch builds and validates the archive for any ref but never
+# creates a release.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Package and publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: openssl, curl, mbstring
+          coverage: none
+
+      # The oldest supported PHP is the one that matters here: newer syntax
+      # slipping in is the failure mode a release must not carry.
+      - name: Lint every PHP file
+        run: |
+          status=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" > /dev/null || { php -l "$file"; status=1; }
+          done < <(find . -name '*.php' -not -path './vendor/*' -print0)
+          exit $status
+
+      - name: Verify version
+        id: version
+        run: |
+          set -euo pipefail
+          version=$(sed -n "s/^define('PLUGIN_GLPIMOBILE_VERSION', *'\([^']*\)').*/\1/p" setup.php)
+          [ -n "$version" ] || { echo "::error::cannot read PLUGIN_GLPIMOBILE_VERSION"; exit 1; }
+          echo "setup.php version: $version"
+
+          if [ "${{ github.ref_type }}" = 'tag' ]; then
+            tag="${GITHUB_REF_NAME#v}"
+            if [ "$tag" != "$version" ]; then
+              echo "::error::Tag ${GITHUB_REF_NAME} does not match PLUGIN_GLPIMOBILE_VERSION ${version}."
+              exit 1
+            fi
+            grep -q "^## \[${version}\]" CHANGELOG.md \
+              || { echo "::error::CHANGELOG.md has no '## [${version}]' section"; exit 1; }
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          case "$version" in *-*) echo "prerelease=true" >> "$GITHUB_OUTPUT" ;;
+                             *)   echo "prerelease=false" >> "$GITHUB_OUTPUT" ;; esac
+
+      - name: Package
+        run: tools/package.sh
+
+      - name: Verify archive layout
+        run: |
+          set -euo pipefail
+          listing=$(unzip -Z1 "dist/glpimobile-${{ steps.version.outputs.version }}.zip")
+          for required in glpimobile/setup.php glpimobile/hook.php glpimobile/src/PairController.php glpimobile/front/config.php glpimobile/LICENSE; do
+            grep -qx "$required" <<< "$listing" || { echo "::error::$required missing from the archive"; exit 1; }
+          done
+          if grep -v '^glpimobile/' <<< "$listing"; then
+            echo "::error::archive has entries outside glpimobile/ (listed above)"; exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: glpimobile-plugin
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish to the release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/glpimobile-${{ steps.version.outputs.version }}.zip
+            dist/glpimobile-${{ steps.version.outputs.version }}.tar.bz2
+            dist/SHA256SUMS.txt
+          generate_release_notes: true
+          prerelease: ${{ steps.version.outputs.prerelease == 'true' }}
+          body: |
+            ## Install
+
+            Unpack the archive into your GLPI `plugins/` directory — it contains
+            a single `glpimobile/` folder, which is the name GLPI expects:
+
+            ```
+            cd /var/www/glpi/plugins
+            unzip glpimobile-${{ steps.version.outputs.version }}.zip
+            ```
+
+            Then Setup → Plugins → install and activate **GLPI Mobile**. Install
+            auto-provisions the OAuth client the app pairs against; nothing else
+            is required for QR pairing. Push notifications are configured under
+            Setup → GLPI Mobile.
+
+            Requires GLPI 11.0+ and PHP 8.2+. Checksums are in `SHA256SUMS.txt`.
+
+            The matching app release is at
+            https://github.com/tankerkiller125/glpi-mobile/releases
+
+            ---

@@ -1,0 +1,60 @@
+name: Bug report
+description: Something in the plugin misbehaves
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Security problems go through [private reporting](../../security/policy),
+        not here.
+
+        Two things to rule out first, because they cause most "the endpoint
+        doesn't exist" reports:
+        - a new or changed route needs `bin/console cache:clear`;
+        - a new class on a running instance needs an opcache reset (restart).
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, what you got.
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: GLPI, PHP and plugin version
+      placeholder: "GLPI 11.0.8, PHP 8.3, glpimobile 0.1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - Pairing / sign-in
+        - Session refresh / unexpected sign-out
+        - Push notifications (UnifiedPush)
+        - Push notifications (FCM)
+        - Push notifications (APNs)
+        - Service catalog forms
+        - Attachments / documents
+        - ITIL links or analysis fields
+        - Assets / planning endpoints
+        - Config page or admin UI
+        - Install / uninstall
+        - Something else
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        From `files/_log/php-errors.log` and the web-server log. Some failures
+        happen *after* the handler returns and only appear in php-errors.log.
+        Please redact tokens and secrets.
+      render: text

@@ -1,0 +1,28 @@
+# PHP / Composer (none are required today — see CONTRIBUTING.md)
+/vendor/
+composer.lock
+
+# GLPI plugin build artifacts
+/dist/
+*.tar.gz
+*.zip
+
+# Locales are compiled from .po at build time
+locales/*.mo
+
+# Credentials — nothing of this kind belongs in the repository. Secrets are
+# stored GLPIKey-encrypted in GLPI's config, entered through Setup > GLPI Mobile.
+*.p8
+*.p12
+*.pem
+*.key
+service-account*.json
+google-services.json
+.env
+.env.*
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store

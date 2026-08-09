@@ -1,0 +1,93 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: PHP ${{ matrix.php }} syntax check
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # GLPI 11 supports 8.2–8.4; the plugin must parse on all of them.
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: openssl, curl, mbstring
+          coverage: none
+
+      - name: Lint every PHP file
+        run: |
+          status=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" > /dev/null || { php -l "$file"; status=1; }
+          done < <(find . -name '*.php' -not -path './vendor/*' -print0)
+          exit $status
+
+  autoload:
+    name: PSR-4 layout
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GLPI autoloads plugin classes as GlpiPlugin\Glpimobile\<Name> from
+      # src/<Name>.php. A rename that misses one of the two halves fails only
+      # at runtime, on whichever page happens to touch the class.
+      - name: Check every src class matches its filename and namespace
+        run: |
+          set -euo pipefail
+          status=0
+          for file in src/*.php; do
+            name=$(basename "$file" .php)
+            grep -qE "^namespace GlpiPlugin\\\\Glpimobile;" "$file" \
+              || { echo "$file: missing 'namespace GlpiPlugin\\Glpimobile;'"; status=1; }
+            grep -qE "^(final |abstract )?(class|interface|trait|enum) ${name}\b" "$file" \
+              || { echo "$file: no type named ${name} declared"; status=1; }
+          done
+          exit $status
+
+  package:
+    name: Build distribution archive
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Package
+        run: tools/package.sh
+
+      # GLPI only sees a plugin whose archive holds a single top-level
+      # directory named exactly "glpimobile", and a stray .git or .github in a
+      # published archive is at best noise.
+      - name: Verify archive layout
+        run: |
+          set -euo pipefail
+          version=$(cat dist/VERSION)
+          listing=$(unzip -Z1 "dist/glpimobile-${version}.zip")
+          echo "$listing"
+          for required in glpimobile/setup.php glpimobile/hook.php glpimobile/src/PairController.php glpimobile/front/config.php glpimobile/LICENSE; do
+            grep -qx "$required" <<< "$listing" || { echo "::error::$required missing from the archive"; exit 1; }
+          done
+          if grep -v '^glpimobile/' <<< "$listing"; then
+            echo "::error::archive has entries outside glpimobile/ (listed above)"; exit 1
+          fi
+          if grep -qE '(^|/)\.(git|github)(/|$)' <<< "$listing"; then
+            echo "::error::archive contains repository metadata"; exit 1
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: glpimobile-plugin
+          path: dist/*
+          if-no-files-found: error
