@@ -1,7 +1,7 @@
 # Contributing
 
 This plugin exists to serve the [GLPI Mobile
-app](https://github.com/tankerkiller125/glpi-mobile). Changes that aren't needed
+app](https://github.com/tankerkiller125/glpi-mobile-app). Changes that aren't needed
 by a client are welcome too, but the app is the reason each endpoint is here.
 
 ## Setup

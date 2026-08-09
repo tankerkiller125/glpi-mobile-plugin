@@ -1,6 +1,6 @@
 # GLPI Mobile — companion plugin
 
-The server side of [**GLPI Mobile**](https://github.com/tankerkiller125/glpi-mobile),
+The server side of [**GLPI Mobile**](https://github.com/tankerkiller125/glpi-mobile-app),
 an offline-first mobile client for [GLPI](https://glpi-project.org/) 11.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -51,7 +51,7 @@ ships with GLPI core.
 
 ```sh
 cd /var/www/glpi/plugins
-git clone https://github.com/tankerkiller125/glpimobile.git glpimobile
+git clone https://github.com/tankerkiller125/glpi-mobile-plugin.git glpimobile
 ```
 
 The directory **must** be named `glpimobile` — GLPI derives class and hook names

@@ -20,7 +20,7 @@ jobs:
         # GLPI 11 supports 8.2–8.4; the plugin must parse on all of them.
         php: ['8.2', '8.3', '8.4']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -40,7 +40,7 @@ jobs:
     name: PSR-4 layout
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # GLPI autoloads plugin classes as GlpiPlugin\Glpimobile\<Name> from
       # src/<Name>.php. A rename that misses one of the two halves fails only
@@ -62,7 +62,7 @@ jobs:
     name: Build distribution archive
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Package
         run: tools/package.sh
@@ -86,7 +86,7 @@ jobs:
             echo "::error::archive contains repository metadata"; exit 1
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: glpimobile-plugin
           path: dist/*

@@ -15,7 +15,7 @@ verification and decided what to keep. But the characters in these files were,
 in the overwhelming majority, produced by a model rather than typed by a person.
 
 The same is true of the mobile app,
-[glpi-mobile](https://github.com/tankerkiller125/glpi-mobile).
+[glpi-mobile](https://github.com/tankerkiller125/glpi-mobile-app).
 
 ## What that means in practice
 

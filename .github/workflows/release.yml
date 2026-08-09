@@ -20,7 +20,7 @@ jobs:
     name: Package and publish
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -74,7 +74,7 @@ jobs:
             echo "::error::archive has entries outside glpimobile/ (listed above)"; exit 1
           fi
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: glpimobile-plugin
           path: dist/*
@@ -82,7 +82,7 @@ jobs:
 
       - name: Publish to the release
         if: github.ref_type == 'tag'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: |
             dist/glpimobile-${{ steps.version.outputs.version }}.zip
@@ -109,6 +109,6 @@ jobs:
             Requires GLPI 11.0+ and PHP 8.2+. Checksums are in `SHA256SUMS.txt`.
 
             The matching app release is at
-            https://github.com/tankerkiller125/glpi-mobile/releases
+            https://github.com/tankerkiller125/glpi-mobile-app/releases
 
             ---
