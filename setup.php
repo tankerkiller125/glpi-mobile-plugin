@@ -78,7 +78,7 @@ function plugin_version_glpimobile()
         'version'      => PLUGIN_GLPIMOBILE_VERSION,
         'author'       => 'Norsewave',
         'license'      => 'MIT',
-        'homepage'     => 'https://github.com/tankerkiller125/glpimobile',
+        'homepage'     => 'https://github.com/tankerkiller125/glpi-mobile-plugin',
         'requirements' => ['glpi' => ['min' => PLUGIN_GLPIMOBILE_MIN_GLPI]],
     ];
 }
