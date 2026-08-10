@@ -95,7 +95,7 @@ runtime from this server. In *Setup → GLPI Mobile*, provide:
 
 - **Client config** (public; the app fetches it): project id, app id, API key,
   sender id. Register an Android app in your Firebase project with the package
-  name `tech.norsewave.glpi`.
+  name `com.tankerkiller125.glpi`.
 - **Service account JSON** (secret, stored encrypted) — the sender credential.
 
 FCM is only offered to the app when all five are present.
@@ -103,7 +103,7 @@ FCM is only offered to the app when all five are present.
 ### APNs (iOS)
 
 Provide the `.p8` key (secret, encrypted), key id, team id and bundle id
-(`tech.norsewave.glpi`), and choose sandbox or production.
+(`com.tankerkiller125.glpi`), and choose sandbox or production.
 
 > **Not verified end to end.** The APNs sender is implemented and its ES256 JWT
 > signing is validated locally, but no Apple device or key was available to test
